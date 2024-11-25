@@ -1,33 +1,46 @@
 import cv2
 import socket
 import struct
-import pickle
+import io
+from PIL import Image
+import numpy as np
 
 # Configuración del socket
-
-SERVER_IP = '0.0.0.0' # !TODO: Cambiar por la IP del servidor
-
+SERVER_IP = '0.0.0.0' #TODO: Remplazar por el IP del servidor
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((SERVER_IP, 8089))
 
-# Captura de video
-cam = cv2.VideoCapture(0)
+# Buffer de datos
+data = b""
+payload_size = struct.calcsize(">L")
 
-# Configuración de la calidad de la imagen
-encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+def pil_to_cv2(pil_image):
+    numpy_image = np.array(pil_image)
+    return cv2.cvtColor(numpy_image, cv2.COLOR_RGB2BGR)
 
-while True:
-    ret, frame = cam.read()
-    if not ret:
-        break
+try:
+    while True:
+        # Recibir el tamaño del frame y luego el frame
+        while len(data) < payload_size:
+            data += client_socket.recv(4096)
+        
+        packed_msg_size = data[:payload_size]
+        data = data[payload_size:]
+        msg_size = struct.unpack(">L", packed_msg_size)[0]
+        
+        while len(data) < msg_size:
+            data += client_socket.recv(4096)
+        
+        frame_data = data[:msg_size]
+        data = data[msg_size:]
+        
+        pil_image = Image.open(io.BytesIO(frame_data))
+        frame = pil_to_cv2(pil_image)
+        
+        cv2.imshow('Video', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
 
-    # Codificar el frame
-    result, frame = cv2.imencode('.jpg', frame, encode_param)
-    data = pickle.dumps(frame, 0)
-    size = len(data)
-
-    # Enviar el tamaño del frame y luego el frame
-    client_socket.sendall(struct.pack(">L", size) + data)
-
-cam.release()
-client_socket.close()
+finally:
+    client_socket.close()
+    cv2.destroyAllWindows()
