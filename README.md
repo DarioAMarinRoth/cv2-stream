@@ -1,11 +1,13 @@
 # OpenCV Video Stream
 
-La comunicación se basa en un modelo cliente-servidor. En este caso, el Hodor sería el cliente y la computadora que recibe el video sería el servidor. Por lo tanto, en el Hodor hay que correr el script 'client.py' y en la notebook el script 'server.py'
+La comunicación se basa en un modelo cliente-servidor. En este caso, el Hodor sería el servidor y la computadora que recibe el video sería el cliente. Por lo tanto, en el Hodor hay que correr el script 'server.py' y en la notebook el script 'client.py'
 
 ## Requisitos
 
 - Ambas computadoras, cliente y servidor, deben contar con la librería de python de OpenCV. \
 Se instala mediante: `pip install opencv-python`
+- El cliente debe contar con la librería Pillow. \
+Se instala mediante: `pip install pillow`
 - Ambas computadoras deben estar conectadas en la misma red.
 - El script del servidor debe estar en ejecución antes de correr el script del cliente.
 
